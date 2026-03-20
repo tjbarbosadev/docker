@@ -1,0 +1,37 @@
+---
+description: Checklist tecnico para Dockerfile e docker-compose (seguranca, performance e producao)
+globs: Dockerfile,**/Dockerfile,**/docker-compose.yml,**/docker-compose.yaml,**/compose.yml,**/compose.yaml
+alwaysApply: false
+---
+
+# Checklist Dockerfile e Compose
+
+## Regras de Revisao
+- Ao sugerir mudancas em Docker, sempre validar: seguranca, tamanho da imagem, tempo de build e clareza operacional.
+- Antes de finalizar, entregar um mini-checklist de validacao com comandos de teste.
+
+## Dockerfile (Obrigatorio)
+- Use imagem base oficial e, quando possivel, fixa por versao (evitar `latest` em producao).
+- Prefira build multi-stage para reduzir tamanho da imagem final.
+- Use `.dockerignore` para evitar copiar arquivos desnecessarios.
+- Organize camadas para aproveitar cache (`package*.json` antes do codigo, por exemplo).
+- Evite executar como root; criar e usar usuario dedicado quando aplicavel.
+- Defina `WORKDIR`, `EXPOSE` (documentacao) e `CMD`/`ENTRYPOINT` de forma explicita.
+
+## Docker Compose (Obrigatorio)
+- Nomeie servicos de forma clara e consistente.
+- Configure `ports`, `volumes`, `environment` e `depends_on` com intencao explicita.
+- Use healthcheck para servicos criticos (db, api) quando possivel.
+- Nao expor portas desnecessarias para host.
+- Separar configuracao de dev e prod (override, profiles ou arquivos distintos).
+
+## Seguranca Minima
+- Nunca commitar segredos reais; usar `.env.example` e variaveis por ambiente.
+- Evitar privilegios elevados sem necessidade.
+- Explicar impacto de cada permissao ou bind mount sensivel.
+
+## Validacao Minima
+- Build: `docker build -t app:test .`
+- Run: `docker run --rm -p 3000:3000 app:test`
+- Compose: `docker compose up --build`
+- Saude: verificar logs e endpoint de health/manual test.
