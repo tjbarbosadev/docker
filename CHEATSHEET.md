@@ -36,6 +36,146 @@ Atalho mental:
 - `image ls` = "quais imagens eu tenho"
 - `tag` = "apelido/versionamento da mesma imagem"
 
+## Dockerfile: comandos mais usados (o que cada um faz)
+
+`Dockerfile` e a receita da imagem: cada instrucao vira camada (layer).
+
+### `FROM`
+
+Define a imagem base.
+
+Exemplo:
+`FROM oven/bun:1`
+
+### `WORKDIR`
+
+Define pasta de trabalho dentro do container.
+Depois disso, `RUN`, `COPY`, `CMD` usam esse contexto.
+
+Exemplo:
+`WORKDIR /usr/src/app`
+
+### `COPY`
+
+Copia arquivos da sua maquina (contexto de build) para a imagem.
+
+Exemplos:
+`COPY package.json bun.lock ./`
+`COPY . .`
+
+### `RUN`
+
+Executa comando durante o build (instalar deps, gerar build, etc).
+
+Exemplo:
+`RUN bun install --frozen-lockfile`
+
+### `EXPOSE`
+
+Documenta a porta que a app usa dentro do container.
+Nao publica porta sozinho; quem publica e `docker run -p`.
+
+Exemplo:
+`EXPOSE 3333`
+
+### `CMD`
+
+Comando padrao ao iniciar o container.
+Pode ser sobrescrito no `docker run`.
+
+Exemplo:
+`CMD ["bun", "run", "src/index.ts"]`
+
+### `ENTRYPOINT`
+
+Define executavel principal fixo do container.
+Geralmente usado junto de `CMD` para argumentos padrao.
+
+Exemplo:
+`ENTRYPOINT ["node"]`
+`CMD ["server.js"]`
+
+### `ENV`
+
+Define variavel de ambiente na imagem/container.
+
+Exemplo:
+`ENV NODE_ENV=production`
+
+### `ARG`
+
+Variavel usada no build (nao persiste igual `ENV` em runtime).
+
+Exemplo:
+`ARG APP_VERSION=dev`
+
+### `USER`
+
+Define usuario que executa o processo no container.
+Boa pratica: evitar rodar como root em producao.
+
+Exemplo:
+`USER bun`
+
+### `VOLUME`
+
+Marca um caminho como ponto de dados persistentes.
+Na pratica moderna, normalmente preferimos declarar no `docker run` ou Compose.
+
+Exemplo:
+`VOLUME ["/data"]`
+
+### `LABEL`
+
+Adiciona metadados na imagem (autor, projeto, etc).
+
+Exemplo:
+`LABEL org.opencontainers.image.source="github.com/user/repo"`
+
+### `STOPSIGNAL`
+
+Define qual sinal sera enviado para encerrar o processo.
+
+Exemplo:
+`STOPSIGNAL SIGTERM`
+
+### `HEALTHCHECK`
+
+Define teste de saude do container.
+Ajuda a detectar app travada/indisponivel.
+
+Exemplo:
+`HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:3333 || exit 1`
+
+### `multi-stage` (mais de um `FROM`)
+
+Permite separar build e runtime para imagem final menor.
+
+Exemplo simples:
+`FROM node:20 AS builder`
+`FROM node:20-slim AS runner`
+
+---
+
+## Dockerfile minimo (seu caso com Bun)
+
+```dockerfile
+FROM oven/bun:1
+WORKDIR /usr/src/app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+EXPOSE 3333
+CMD ["bun", "run", "src/index.ts"]
+```
+
+Checklist mental:
+- base definida (`FROM`)
+- pasta de trabalho (`WORKDIR`)
+- deps com cache (`COPY package*.json/lock` antes de `COPY . .`)
+- porta documentada (`EXPOSE`)
+- comando de subida (`CMD`)
+
 ## Regra de ouro: ordem do `docker run`
 
 Formato:
